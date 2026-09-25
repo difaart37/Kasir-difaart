@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>difa.art — Percetakan & Sublim</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf & html2canvas for PDF/Image Export on Android/iOS/iPad -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pinky: {
+                            50: '#fff0f5',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            soft: '#ffb6c1',
+                            accent: '#ff8da1'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Quicksand', 'sans-serif'],
+                        cute: ['Fredoka', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #fff8f9;
+            color: #374151;
+        }
+
+        /* Cute Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fff0f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fda4af;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fb7185;
+        }
+
+        .cute-card {
+            background: #ffffff;
+            border: 1.5px solid #ffe4e6;
+            box-shadow: 0 4px 15px -3px rgba(251, 113, 133, 0.08);
+            border-radius: 1.25rem;
+        }
+
+        .cute-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .cute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px -3px rgba(244, 63, 94, 0.25);
+        }
+        .cute-btn:active {
+            transform: translateY(1px);
+        }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 1rem;
+        }
+        .sidebar-item.active {
+            background-color: #ffe4e6;
+            color: #e11d48;
+            font-weight: 700;
+        }
+        .sidebar-item:hover:not(.active) {
+            background-color: #fff0f5;
+            color: #f43f5e;
+        }
+
+        /* Thermal & Paper Dynamic Receipt Sizes */
+        .paper-58mm { width: 58mm !important; max-width: 58mm !important; font-size: 10px !important; }
+        .paper-80mm { width: 80mm !important; max-width: 80mm !important; font-size: 11px !important; }
+        .paper-a5 { width: 148mm !important; max-width: 148mm !important; font-size: 12px !important; }
+        .paper-a4 { width: 210mm !important; max-width: 210mm !important; font-size: 13px !important; }
+
+        /* Collapsed Sidebar Styles */
+        aside.collapsed {
+            width: 5rem !important;
+        }
+        aside.collapsed .brand-text,
+        aside.collapsed .nav-text,
+        aside.collapsed .profile-text {
+            display: none !important;
+        }
+        aside.collapsed .sidebar-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        aside.collapsed .sidebar-header {
+            justify-content: center;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-receipt-wrapper, #printable-receipt-wrapper * {
+                visibility: visible;
+            }
+            #printable-receipt-wrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+                padding: 10px;
+                background: white !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex text-gray-700 bg-[#fff8f9]">
+
+    <!-- Sidebar Left Layout -->
+    <aside id="main-sidebar" class="w-64 bg-white border-r-2 border-pinky-100 flex flex-col justify-between p-4 sticky top-0 h-screen z-20 shrink-0 shadow-sm transition-all duration-300">
+        <div class="space-y-5">
+            <!-- Brand Logo & Toggle Sidebar -->
+            <div class="sidebar-header px-1 py-2 flex items-center justify-between">
+                <div class="flex items-center space-x-3 overflow-hidden">
+                    <div class="w-10 h-10 rounded-2xl bg-pinky-100 border border-pinky-300 flex items-center justify-center text-pinky-600 shadow-inner shrink-0">
+                        <i class="fa-solid fa-print text-xl"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1 class="font-cute font-bold text-xl text-pinky-600 tracking-wide leading-tight">difa.art</h1>
+                        <p class="text-[9px] text-pinky-400 font-medium uppercase tracking-wider">LITTLE GIFT ♡</p>
+                    </div>
+                </div>
+                <!-- Toggle Sidebar Button -->
+                <button onclick="toggleSidebar()" title="Sembunyikan / Tampilkan Menu" class="text-gray-400 hover:text-pinky-600 p-1.5 rounded-xl hover:bg-pinky-50">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1 font-medium text-xs">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="sidebar-item active px-3.5 py-2.5 flex items-center gap-3" title="Dashboard">
+                    <i class="fa-solid fa-house w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="#" onclick="switchTab('kasir')" id="nav-kasir" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Kasir">
+                    <i class="fa-solid fa-cash-register w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Kasir</span>
+                </a>
+                <a href="#" onclick="switchTab('produk')" id="nav-produk" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Produk & Jasa">
+                    <i class="fa-solid fa-box-archive w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Produk & Bahan</span>
+                </a>
+                <a href="#" onclick="switchTab('pelanggan')" id="nav-pelanggan" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Pelanggan">
+                    <i class="fa-solid fa-users w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Pelanggan</span>
+                </a>
+                <a href="#" onclick="switchTab('pesanan')" id="nav-pesanan" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Pesanan">
+                    <i class="fa-solid fa-receipt w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Pesanan & Struk</span>
+                </a>
+                <a href="#" onclick="switchTab('piutang')" id="nav-piutang" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Piutang">
+                    <i class="fa-solid fa-hand-holding-dollar w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Piutang DP</span>
+                </a>
+                <a href="#" onclick="switchTab('pengeluaran')" id="nav-pengeluaran" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Pengeluaran">
+                    <i class="fa-solid fa-wallet w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Pengeluaran</span>
+                </a>
+                <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Laporan">
+                    <i class="fa-solid fa-chart-line w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Laporan Keuangan</span>
+                </a>
+                <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="sidebar-item px-3.5 py-2.5 flex items-center gap-3" title="Pengaturan Nota">
+                    <i class="fa-solid fa-sliders w-4 text-center shrink-0"></i>
+                    <span class="nav-text">Pengaturan Nota</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Footer Profile with Edit Action -->
+        <div class="pt-3 border-t border-pinky-100 flex items-center justify-between px-1">
+            <div class="flex items-center gap-2 overflow-hidden cursor-pointer" onclick="openProfileModal()" title="Klik untuk Edit Profil">
+                <img id="sidebar-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-8 h-8 rounded-full border border-pinky-400 object-cover shrink-0">
+                <div class="profile-text">
+                    <p id="sidebar-account-name" class="text-xs font-bold text-gray-800 line-clamp-1">Difa Admin</p>
+                    <p id="sidebar-account-status" class="text-[10px] text-emerald-500 font-semibold">● Online</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="openProfileModal()" title="Edit Profil Akun" class="text-gray-400 hover:text-pinky-600 text-xs p-1">
+                    <i class="fa-solid fa-user-pen"></i>
+                </button>
+                <button onclick="resetDataPrompt()" title="Reset Database" class="text-gray-400 hover:text-pinky-600 text-xs p-1">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+
+        <!-- Top Header Bar -->
+        <header class="flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <h1 class="font-cute font-bold text-2xl md:text-3xl text-gray-800 flex items-center gap-2">
+                    Halo, <span id="header-user-greeting">Difa Admin</span>! <span class="text-pinky-500">♡</span>
+                </h1>
+                <p class="text-xs text-gray-400 font-medium">Sistem Kasir & Nota Digital difa.art</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-white px-4 py-2 rounded-2xl border border-pinky-200 text-xs font-bold text-pinky-600 shadow-xs flex items-center gap-2">
+                    <i class="fa-regular fa-calendar text-pinky-400"></i>
+                    <span id="header-date-pill"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= PAGE 1: DASHBOARD ================= -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="cute-card p-5 space-y-2">
+                    <p class="text-xs font-semibold text-gray-400">Penjualan Hari Ini</p>
+                    <p id="dash-sales-today" class="font-cute font-bold text-2xl text-pinky-600">Rp 0</p>
+                </div>
+                <div class="cute-card p-5 space-y-2">
+                    <p class="text-xs font-semibold text-gray-400">Transaksi Hari Ini</p>
+                    <p id="dash-trx-count" class="font-cute font-bold text-2xl text-gray-800">0</p>
+                </div>
+                <div class="cute-card p-5 space-y-2">
+                    <p class="text-xs font-semibold text-gray-400">Total Piutang (DP)</p>
+                    <p id="dash-piutang-total" class="font-cute font-bold text-2xl text-amber-500">Rp 0</p>
+                </div>
+                <div class="cute-card p-5 space-y-2">
+                    <p class="text-xs font-semibold text-gray-400">Pengeluaran Hari Ini</p>
+                    <p id="dash-expense-today" class="font-cute font-bold text-2xl text-gray-700">Rp 0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Recent Trx Table -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="cute-card p-5 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h2 class="font-cute font-bold text-lg text-gray-800">Transaksi Terbaru</h2>
+                            <button onclick="switchTab('pesanan')" class="text-xs text-pinky-500 hover:underline font-semibold">Lihat Semua</button>
+                        </div>
+                        <div id="dash-recent-list" class="space-y-3">
+                            <!-- Items rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Menu -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="cute-card p-5 space-y-4">
+                        <h2 class="font-cute font-bold text-lg text-gray-800 flex items-center gap-2">
+                            Menu Cepat <span class="text-sm">✨</span>
+                        </h2>
+                        <div class="grid grid-cols-1 gap-3">
+                            <button onclick="switchTab('kasir')" class="cute-btn w-full bg-pinky-500 hover:bg-pinky-600 text-white font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-plus-circle"></i> + Transaksi Baru
+                            </button>
+                            <button onclick="openAddProductModal()" class="cute-btn w-full bg-pinky-100 hover:bg-pinky-200 text-pinky-700 border border-pinky-300 font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-box-archive"></i> + Produk / Bahan Baru
+                            </button>
+                            <button onclick="openCategoryModal()" class="cute-btn w-full bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-tags"></i> + Kelola Kategori
+                            </button>
+                            <button onclick="openAddCustomerModal()" class="cute-btn w-full bg-pinky-50 hover:bg-pinky-100 text-pinky-600 border border-pinky-200 font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-user-plus"></i> + Pelanggan Baru
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 2: KASIR (POS) ================= -->
+        <section id="tab-kasir" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Catalog Side -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="cute-card p-4 flex flex-wrap gap-3 items-center justify-between">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-pinky-300"></i>
+                        <input type="text" id="pos-search" onkeyup="filterPosProducts()" placeholder="Cari cetakan, bahan, atau jasa..." class="w-full pl-9 pr-4 py-2 bg-pinky-50/50 border border-pinky-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-pinky-300">
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="pos-category-filter" onchange="filterPosProducts()" class="px-3 py-2 bg-pinky-50/50 border border-pinky-200 rounded-xl text-xs font-semibold focus:outline-none">
+                            <!-- Category Options Rendered Dynamically -->
+                        </select>
+                        <button onclick="openAddProductModal()" class="cute-btn bg-pinky-500 hover:bg-pinky-600 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Baru
+                        </button>
+                    </div>
+                </div>
+
+                <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto pr-1">
+                    <!-- Dynamic Product Cards -->
+                </div>
+            </div>
+
+            <!-- Cart Side -->
+            <div class="lg:col-span-5">
+                <div class="cute-card p-5 space-y-4 flex flex-col h-full">
+                    <div class="flex justify-between items-center border-b border-pinky-100 pb-3">
+                        <h2 class="font-cute font-bold text-lg text-pinky-600 flex items-center gap-2">
+                            <i class="fa-solid fa-basket-shopping"></i> Item Pesanan
+                        </h2>
+                        <button onclick="clearCart()" class="text-xs text-gray-400 hover:text-pinky-500 font-semibold underline">Reset</button>
+                    </div>
+
+                    <!-- Customer & Job Details -->
+                    <div class="space-y-2 bg-pinky-50/60 p-3 rounded-2xl border border-pinky-100">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-gray-700">Pelanggan:</label>
+                            <button onclick="openAddCustomerModal()" class="text-[10px] text-pinky-600 hover:underline font-bold">+ Tambah</button>
+                        </div>
+                        <select id="pos-customer-select" class="w-full px-3 py-1.5 bg-white border border-pinky-200 rounded-xl text-xs focus:outline-none">
+                            <option value="Umum">Pelanggan Umum</option>
+                        </select>
+                        <div>
+                            <label class="text-[11px] font-semibold text-gray-600 block mb-1">Judul Cetak / File <span class="text-pinky-500">*</span></label>
+                            <input type="text" id="pos-print-title" placeholder="contoh: Stiker Logo Olivia" class="w-full px-3 py-1.5 bg-white border border-pinky-200 rounded-xl text-xs focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Cart Item List -->
+                    <div id="pos-cart-list" class="flex-1 overflow-y-auto space-y-2.5 max-h-[220px] pr-1">
+                        <!-- Items rendered via JS -->
+                    </div>
+
+                    <!-- Checkout Summary -->
+                    <div class="border-t border-pinky-100 pt-3 space-y-3 mt-auto">
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Subtotal Item</span>
+                                <span id="pos-subtotal-text" class="font-bold text-gray-800">Rp 0</span>
+                            </div>
+
+                            <!-- FITUR UBAH TOTAL HARGA MANUAL -->
+                            <div class="bg-pinky-50/80 p-2 rounded-xl border border-pinky-200 space-y-1 text-xs">
+                                <div class="flex justify-between items-center">
+                                    <label class="flex items-center gap-1.5 cursor-pointer font-bold text-pinky-700">
+                                        <input type="checkbox" id="pos-custom-total-check" onchange="toggleCustomTotalInput()" class="rounded border-pinky-300 text-pinky-600 focus:ring-pinky-400">
+                                        <span>Ubah Total Manual</span>
+                                    </label>
+                                    <span id="pos-calculated-total-text" class="font-bold text-pinky-600 text-sm">Rp 0</span>
+                                </div>
+                                <div id="pos-custom-total-box" class="hidden flex justify-between items-center pt-1 border-t border-pinky-200">
+                                    <span class="text-[11px] font-semibold text-gray-600">Total Baru (Rp):</span>
+                                    <input type="number" id="pos-custom-total-input" oninput="calculatePosChange()" placeholder="0" class="w-32 px-2 py-0.5 bg-white border border-pinky-300 rounded-lg text-right font-mono font-bold focus:outline-none text-pinky-600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Option -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Status Pembayaran</label>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+                                <button onclick="setPaymentType('LUNAS')" id="paytype-LUNAS" class="pay-type-btn border-2 border-pinky-400 bg-pinky-100 text-pinky-700 py-1.5 rounded-xl font-bold">LUNAS</button>
+                                <button onclick="setPaymentType('DP')" id="paytype-DP" class="pay-type-btn border border-pinky-200 bg-white text-gray-600 hover:border-pinky-300 py-1.5 rounded-xl font-bold">DP (Piutang)</button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="grid grid-cols-4 gap-1 text-[11px] font-medium">
+                            <button onclick="setPaymentMethod('Tunai')" id="paymethod-Tunai" class="pay-method-btn border-2 border-pinky-400 bg-pinky-100 text-pinky-700 py-1 rounded-lg">Tunai</button>
+                            <button onclick="setPaymentMethod('QRIS')" id="paymethod-QRIS" class="pay-method-btn border border-pinky-200 bg-white text-gray-600 py-1 rounded-lg">QRIS</button>
+                            <button onclick="setPaymentMethod('Transfer')" id="paymethod-Transfer" class="pay-method-btn border border-pinky-200 bg-white text-gray-600 py-1 rounded-lg">Transfer</button>
+                            <button onclick="setPaymentMethod('Debit')" id="paymethod-Debit" class="pay-method-btn border border-pinky-200 bg-white text-gray-600 py-1 rounded-lg">Debit</button>
+                        </div>
+
+                        <!-- Pay Input & Change Calculation -->
+                        <div class="bg-pinky-50 p-2.5 rounded-2xl border border-pinky-200 space-y-1 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span id="cash-label" class="font-semibold text-gray-600">Bayar (Rp):</span>
+                                <input type="number" id="pos-cash-input" oninput="calculatePosChange()" placeholder="0" class="w-32 px-2.5 py-1 bg-white border border-pinky-300 rounded-lg text-right font-mono font-bold focus:outline-none">
+                            </div>
+                            <div class="flex justify-between items-center text-pinky-700 font-bold pt-1 border-t border-pinky-200">
+                                <span id="change-label">Kembalian:</span>
+                                <span id="pos-change-text" class="font-mono">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <button onclick="processCheckout()" class="cute-btn w-full bg-pinky-500 hover:bg-pinky-600 text-white font-cute font-bold py-3 rounded-2xl shadow-md text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-print"></i> Process & Cetak Struk
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 3: PRODUK & BAHAN ================= -->
+        <section id="tab-produk" class="hidden space-y-5">
+            <div class="cute-card p-5 flex flex-wrap justify-between items-center gap-3">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800">Manajemen Produk & Bahan Cetak</h2>
+                    <p class="text-xs text-gray-400">Kelola foto produk, ubah gambar, harga modal, harga jual, dan stok bahan baku</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openCategoryModal()" class="cute-btn bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-300 px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-tags text-sm"></i> Kelola Kategori
+                    </button>
+                    <button onclick="openAddProductModal()" class="cute-btn bg-pinky-500 hover:bg-pinky-600 text-white px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-plus-circle text-sm"></i> Tambah Produk / Bahan
+                    </button>
+                </div>
+            </div>
+
+            <div class="cute-card p-5 space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <div class="relative w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-pinky-300"></i>
+                        <input type="text" id="product-mgr-search" onkeyup="renderProductTable()" placeholder="Cari nama produk / bahan..." class="w-full pl-9 pr-4 py-2 bg-pinky-50/50 border border-pinky-200 rounded-xl text-xs focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-pinky-100">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-pinky-100/70 text-pinky-700 font-cute font-bold">
+                            <tr>
+                                <th class="p-3">Gambar</th>
+                                <th class="p-3">Produk / Bahan</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Harga Modal</th>
+                                <th class="p-3">Harga Jual</th>
+                                <th class="p-3">Stok</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body" class="divide-y divide-pinky-50 text-gray-600">
+                            <!-- Items rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 4: PELANGGAN ================= -->
+        <section id="tab-pelanggan" class="hidden space-y-5">
+            <div class="cute-card p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800">Direktori Pelanggan</h2>
+                    <p class="text-xs text-gray-400">Data Kontak & Pelanggan Setia difa.art</p>
+                </div>
+                <button onclick="openAddCustomerModal()" class="cute-btn bg-pinky-500 hover:bg-pinky-600 text-white px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> + Pelanggan Baru
+                </button>
+            </div>
+
+            <div class="cute-card p-5">
+                <div class="overflow-x-auto rounded-2xl border border-pinky-100">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-pinky-100/70 text-pinky-700 font-cute font-bold">
+                            <tr>
+                                <th class="p-3">Nama Pelanggan</th>
+                                <th class="p-3">No. WhatsApp</th>
+                                <th class="p-3">Alamat</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-table-body" class="divide-y divide-pinky-50">
+                            <!-- Rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 5: PESANAN & STRUK ================= -->
+        <section id="tab-pesanan" class="hidden space-y-5">
+            <div class="cute-card p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800">Riwayat Pesanan</h2>
+                    <p class="text-xs text-gray-400">Daftar transaksi, pratinjau, dan simpan nota/struk</p>
+                </div>
+                <button onclick="exportSalesToCSV()" class="cute-btn bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Export CSV / Excel
+                </button>
+            </div>
+
+            <div class="cute-card p-5">
+                <div class="overflow-x-auto rounded-2xl border border-pinky-100">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-pinky-100/70 text-pinky-700 font-cute font-bold">
+                            <tr>
+                                <th class="p-3">Invoice / Tanggal</th>
+                                <th class="p-3">Judul Cetak</th>
+                                <th class="p-3">Pelanggan</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Total</th>
+                                <th class="p-3 text-center">Aksi Struk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-pinky-50">
+                            <!-- Rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 6: PIUTANG ================= -->
+        <section id="tab-piutang" class="hidden space-y-5">
+            <div class="cute-card p-5">
+                <h2 class="font-cute font-bold text-xl text-gray-800">Daftar Piutang (Sisa DP)</h2>
+                <p class="text-xs text-gray-400">Pelunasan pesanan yang belum selesai dibayar</p>
+            </div>
+
+            <div class="cute-card p-5">
+                <div class="overflow-x-auto rounded-2xl border border-pinky-100">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-amber-100 text-amber-800 font-cute font-bold">
+                            <tr>
+                                <th class="p-3">No Invoice</th>
+                                <th class="p-3">Pelanggan</th>
+                                <th class="p-3">Total Tagihan</th>
+                                <th class="p-3">DP Terbayar</th>
+                                <th class="p-3">Sisa Piutang</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="piutang-table-body" class="divide-y divide-amber-50">
+                            <!-- Rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 7: PENGELUARAN ================= -->
+        <section id="tab-pengeluaran" class="hidden space-y-5">
+            <div class="cute-card p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800">Catatan Pengeluaran Percetakan</h2>
+                    <p class="text-xs text-gray-400">Operasional, pembelian bahan baku, tinta, dsb.</p>
+                </div>
+                <button onclick="openAddExpenseModal()" class="cute-btn bg-pinky-500 hover:bg-pinky-600 text-white px-4 py-2 rounded-2xl text-xs font-bold">
+                    + Catat Pengeluaran
+                </button>
+            </div>
+
+            <div class="cute-card p-5">
+                <div class="overflow-x-auto rounded-2xl border border-pinky-100">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-pinky-100/70 text-pinky-700 font-cute font-bold">
+                            <tr>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Keterangan</th>
+                                <th class="p-3 text-right">Jumlah (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body" class="divide-y divide-pinky-50">
+                            <!-- Rendered via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 8: LAPORAN ================= -->
+        <section id="tab-laporan" class="hidden space-y-5">
+            <div class="cute-card p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800">Laporan Keuangan & Omset</h2>
+                    <p class="text-xs text-gray-400">Rekapitulasi total pendapatan vs pengeluaran</p>
+                </div>
+                <button onclick="exportSalesToCSV()" class="cute-btn bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Export Rekap (.CSV)
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="cute-card p-5">
+                    <p class="text-xs text-gray-400 font-semibold">Total Omset Penjualan</p>
+                    <p id="report-total-sales" class="font-cute font-bold text-2xl text-emerald-600 mt-1">Rp 0</p>
+                </div>
+                <div class="cute-card p-5">
+                    <p class="text-xs text-gray-400 font-semibold">Total Pengeluaran</p>
+                    <p id="report-total-expense" class="font-cute font-bold text-2xl text-rose-500 mt-1">Rp 0</p>
+                </div>
+                <div class="cute-card p-5">
+                    <p class="text-xs text-gray-400 font-semibold">Keuntungan Bersih (Laba)</p>
+                    <p id="report-net-profit" class="font-cute font-bold text-2xl text-pinky-600 mt-1">Rp 0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 9: PENGATURAN STRUK & TEKS NOTA ================= -->
+        <section id="tab-pengaturan" class="hidden space-y-5">
+            <div class="cute-card p-5 space-y-6 max-w-2xl">
+                <div>
+                    <h2 class="font-cute font-bold text-xl text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-pinky-500"></i> Pengaturan Struk & Nota
+                    </h2>
+                    <p class="text-xs text-gray-400">Atur ukuran cetak dan ubah/hapus teks identitas toko yang tercetak di nota</p>
+                </div>
+
+                <!-- Fitur Ubah Teks Header Nota -->
+                <div class="space-y-3 bg-pinky-50/60 p-4 rounded-2xl border border-pinky-200">
+                    <h3 class="font-cute font-bold text-sm text-pinky-700 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square"></i> Ubah / Hapus Teks Identitas Nota
+                    </h3>
+                    
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Teks Utama Header (Kosongkan jika ingin dihapus):</label>
+                            <input type="text" id="setting-receipt-header" placeholder="contoh: difa.art • Percetakan & Sublim" class="w-full px-3 py-2 bg-white border border-pinky-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Teks Sub-Header / Slogan (Kosongkan jika ingin dihapus):</label>
+                            <input type="text" id="setting-receipt-sub" placeholder="contoh: LITTLE GIFT FOR EVERYONE ♡" class="w-full px-3 py-2 bg-white border border-pinky-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div class="flex justify-end gap-2 pt-1">
+                            <button onclick="clearReceiptHeaderText()" class="px-3 py-1.5 bg-rose-100 text-rose-600 rounded-xl font-bold hover:bg-rose-200">Hapus Semua Teks</button>
+                            <button onclick="saveReceiptHeaderSettings()" class="cute-btn px-4 py-1.5 bg-pinky-500 text-white rounded-xl font-bold">Simpan Teks Nota</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 border-t border-pinky-100 pt-4">
+                    <label class="block text-xs font-bold text-gray-700">Format Ukuran Cetak & PDF Struk Nota:</label>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div onclick="selectReceiptPaperSize('58mm')" id="size-card-58mm" class="paper-size-card p-4 rounded-2xl border-2 border-pinky-400 bg-pinky-50 cursor-pointer flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-sm text-pinky-700">58 mm Thermal</h4>
+                                <p class="text-[10px] text-gray-500">Struk Thermal Kecil Mini</p>
+                            </div>
+                            <i class="fa-solid fa-check-circle text-pinky-600 text-lg"></i>
+                        </div>
+
+                        <div onclick="selectReceiptPaperSize('80mm')" id="size-card-80mm" class="paper-size-card p-4 rounded-2xl border border-pinky-200 bg-white cursor-pointer flex items-center justify-between hover:border-pinky-300">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">80 mm Thermal</h4>
+                                <p class="text-[10px] text-gray-500">Struk Thermal Standar Kasir</p>
+                            </div>
+                            <i class="fa-solid fa-circle text-gray-300 text-lg"></i>
+                        </div>
+
+                        <div onclick="selectReceiptPaperSize('a5')" id="size-card-a5" class="paper-size-card p-4 rounded-2xl border border-pinky-200 bg-white cursor-pointer flex items-center justify-between hover:border-pinky-300">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">A5 (Mini Nota)</h4>
+                                <p class="text-[10px] text-gray-500">Nota Setengah Kertas HVS</p>
+                            </div>
+                            <i class="fa-solid fa-circle text-gray-300 text-lg"></i>
+                        </div>
+
+                        <div onclick="selectReceiptPaperSize('a4')" id="size-card-a4" class="paper-size-card p-4 rounded-2xl border border-pinky-200 bg-white cursor-pointer flex items-center justify-between hover:border-pinky-300">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">A4 / Letter</h4>
+                                <p class="text-[10px] text-gray-500">Nota Invoice Lengkap HVS</p>
+                            </div>
+                            <i class="fa-solid fa-circle text-gray-300 text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: Tambah / Edit Produk & Ubah Gambar/Harga -->
+    <div id="modal-product" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-pinky-300 w-full max-w-md p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-pinky-100 pb-2">
+                <h3 class="font-cute font-bold text-lg text-pinky-600 flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive"></i> <span id="modal-product-title">Tambah Produk / Bahan</span>
+                </h3>
+                <button onclick="closeProductModal()" class="text-gray-400 hover:text-pinky-500 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-product" onsubmit="saveProduct(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="prod-id">
+                
+                <!-- Image Preview & Change/Upload Feature -->
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Ubah Gambar Produk / Bahan</label>
+                    <div class="flex items-center gap-3 bg-pinky-50 p-2.5 rounded-2xl border border-pinky-200">
+                        <img id="prod-img-preview" src="https://placehold.co/150x150/ffe4e6/e11d48?text=Foto" class="w-14 h-14 object-cover rounded-xl border border-pinky-300 shrink-0">
+                        <div class="space-y-1 text-[11px] flex-1">
+                            <input type="file" id="prod-file-input" accept="image/*" onchange="handleImageUpload(event)" class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pinky-500 file:text-white hover:file:bg-pinky-600 cursor-pointer">
+                            <input type="hidden" id="prod-img-data">
+                            <p class="text-[10px] text-gray-400">Ganti foto dari galeri HP / iPad / PC</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Nama Produk / Bahan *</label>
+                    <input type="text" id="prod-name" required placeholder="contoh: Stiker Vinyl Graftac A3+" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block font-semibold text-gray-600">Kategori *</label>
+                            <button type="button" onclick="openCategoryModal()" class="text-[10px] text-pinky-600 hover:underline font-bold">+ Baru</button>
+                        </div>
+                        <select id="prod-category" required class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Satuan *</label>
+                        <input type="text" id="prod-unit" required placeholder="pcs / lembar / m2" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Harga Modal (Rp)</label>
+                        <input type="number" id="prod-cost" placeholder="0" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-pinky-600 mb-1 font-bold">Harga Jual / Satuan (Rp) *</label>
+                        <input type="number" id="prod-price" required placeholder="10000" class="w-full px-3 py-2 border-2 border-pinky-300 bg-pinky-50/30 rounded-xl font-bold focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Stok Awal</label>
+                    <input type="number" id="prod-stock" placeholder="100" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-pinky-100">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="cute-btn px-4 py-2 bg-pinky-500 text-white rounded-xl font-semibold">Simpan Produk & Harga</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL BARU: Kelola & Tambah Kategori -->
+    <div id="modal-category" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-purple-300 w-full max-w-sm p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-purple-100 pb-2">
+                <h3 class="font-cute font-bold text-lg text-purple-600 flex items-center gap-2">
+                    <i class="fa-solid fa-tags"></i> Kelola Kategori
+                </h3>
+                <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-purple-500 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveCategory(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Tambah Kategori Baru</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="cat-name-input" placeholder="contoh: Acrylic / Gantungan Kunci" class="flex-1 px-3 py-2 border border-purple-200 rounded-xl focus:outline-none">
+                        <button type="submit" class="cute-btn bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-xl font-bold">
+                            + Tambah
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="space-y-2 pt-2 border-t border-purple-100">
+                <p class="text-[11px] font-bold text-gray-600">Daftar Kategori Saat Ini:</p>
+                <div id="category-list-container" class="max-h-48 overflow-y-auto space-y-1.5 pr-1 text-xs">
+                    <!-- Dynamic list of categories -->
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="closeCategoryModal()" class="w-full py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold text-xs">Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Edit Profil Akun -->
+    <div id="modal-profile" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-pinky-300 w-full max-w-sm p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-pinky-100 pb-2">
+                <h3 class="font-cute font-bold text-lg text-pinky-600 flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profil Akun
+                </h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-pinky-500 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveProfile(event)" class="space-y-3 text-xs">
+                <div class="flex justify-center">
+                    <div class="relative">
+                        <img id="profile-avatar-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-20 h-20 rounded-full border-2 border-pinky-400 object-cover shadow-sm">
+                        <label for="profile-avatar-file" class="absolute bottom-0 right-0 bg-pinky-500 text-white p-1.5 rounded-full text-xs cursor-pointer shadow hover:bg-pinky-600">
+                            <i class="fa-solid fa-camera"></i>
+                        </label>
+                        <input type="file" id="profile-avatar-file" accept="image/*" onchange="handleAvatarUpload(event)" class="hidden">
+                        <input type="hidden" id="profile-avatar-data">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Nama Pengguna / Admin *</label>
+                    <input type="text" id="profile-name-input" required class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none font-bold text-gray-800">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Status Akun</label>
+                    <input type="text" id="profile-status-input" placeholder="● Online" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none text-emerald-600 font-semibold">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-pinky-100">
+                    <button type="button" onclick="closeProfileModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="cute-btn px-4 py-2 bg-pinky-500 text-white rounded-xl font-semibold">Simpan Profil</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Tambah Pelanggan -->
+    <div id="modal-customer" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-pinky-300 w-full max-w-sm p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-pinky-100 pb-2">
+                <h3 class="font-cute font-bold text-lg text-pinky-600 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan
+                </h3>
+                <button onclick="closeCustomerModal()" class="text-gray-400 hover:text-pinky-500 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveCustomer(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Nama Pelanggan *</label>
+                    <input type="text" id="cust-name" required placeholder="contoh: Olivia" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">No. WhatsApp / HP</label>
+                    <input type="text" id="cust-phone" placeholder="08123456789" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Alamat Singkat</label>
+                    <input type="text" id="cust-address" placeholder="Surabaya" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-pinky-100">
+                    <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="cute-btn px-4 py-2 bg-pinky-500 text-white rounded-xl font-semibold">Simpan Pelanggan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Tambah Pengeluaran -->
+    <div id="modal-expense" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-pinky-300 w-full max-w-sm p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center border-b border-pinky-100 pb-2">
+                <h3 class="font-cute font-bold text-lg text-pinky-600">Catat Pengeluaran</h3>
+                <button onclick="closeExpenseModal()" class="text-gray-400 hover:text-pinky-500 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="saveExpense(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Kategori Pengeluaran</label>
+                    <select id="exp-category" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                        <option value="Bahan Baku">Pembelian Bahan Baku</option>
+                        <option value="Operasional">Operasional & Listrik</option>
+                        <option value="Perawatan Mesin">Perawatan / Service Mesin</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Keterangan / Detail *</label>
+                    <input type="text" id="exp-desc" required placeholder="Beli Tinta Sublim Epson 4 Warna" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-gray-600 mb-1">Nominal (Rp) *</label>
+                    <input type="number" id="exp-amount" required placeholder="150000" class="w-full px-3 py-2 border border-pinky-200 rounded-xl focus:outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-pinky-100">
+                    <button type="button" onclick="closeExpenseModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold">Batal</button>
+                    <button type="submit" class="cute-btn px-4 py-2 bg-pinky-500 text-white rounded-xl font-semibold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Interactive Printable Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl border-2 border-pinky-300 w-full max-w-md p-6 space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            
+            <!-- Quick Header Text Edit Box inside Modal -->
+            <div class="no-print bg-pinky-50 p-2.5 rounded-2xl border border-pinky-200 space-y-2">
+                <div class="flex justify-between items-center text-[11px] font-bold text-pinky-700">
+                    <span><i class="fa-solid fa-pen"></i> Edit / Hapus Teks Identitas Nota:</span>
+                    <button onclick="promptEditReceiptHeader()" class="text-pinky-600 hover:underline text-[10px]">Ubah Teks</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Receipt Container -->
+            <div class="flex justify-center">
+                <div id="printable-receipt-wrapper" class="paper-58mm bg-white border border-pinky-200 p-4 rounded-xl shadow-xs space-y-3 font-sans text-gray-800">
+                    <div class="text-center space-y-1">
+                        <div class="inline-block p-2 bg-pinky-100 rounded-2xl border border-pinky-300 mb-1">
+                            <i class="fa-solid fa-heart text-pinky-500 text-xl"></i>
+                        </div>
+                        <h2 id="receipt-store-title" class="font-cute font-bold text-xl text-pinky-600">difa.art</h2>
+                        <p id="receipt-store-sub" class="text-[9px] text-gray-500 font-medium">LITTLE GIFT FOR EVERYONE ♡</p>
+                        <p id="receipt-header-text" class="text-[9px] text-gray-400">difa.art • Percetakan & Sublim</p>
+                    </div>
+
+                    <div class="border-b-2 border-dashed border-pinky-200 my-2"></div>
+
+                    <div class="space-y-1 text-[10px]">
+                        <div class="flex justify-between"><span class="text-gray-500">No. Inv:</span><span id="receipt-id" class="font-mono font-bold">#INV-001</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Tanggal:</span><span id="receipt-date"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Pelanggan:</span><span id="receipt-customer" class="font-bold"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Judul Cetak:</span><span id="receipt-title" class="font-bold text-pinky-600"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Status:</span><span id="receipt-status-badge" class="font-bold"></span></div>
+                    </div>
+
+                    <div class="border-b-2 border-dashed border-pinky-200 my-2"></div>
+
+                    <div id="receipt-items-list" class="space-y-1.5"></div>
+
+                    <div class="border-b-2 border-dashed border-pinky-200 my-2"></div>
+
+                    <div class="space-y-1 text-[11px]">
+                        <div class="flex justify-between font-bold text-pinky-600">
+                            <span>TOTAL</span>
+                            <span id="receipt-total">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 text-[10px]">
+                            <span>Terbayar:</span>
+                            <span id="receipt-cash">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 text-[10px]">
+                            <span id="receipt-change-lbl">Kembalian:</span>
+                            <span id="receipt-change">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-pinky-100 pt-3 text-center space-y-1">
+                        <p class="text-[10px] font-cute font-semibold text-pinky-500">Terima Kasih Telah Mencetak di difa.art! ♡</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Actions Row -->
+            <div class="space-y-2 pt-2 no-print border-t border-pinky-100">
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="downloadReceiptPDF()" class="cute-btn py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Save Nota PDF
+                    </button>
+                    <button onclick="downloadReceiptImage()" class="cute-btn py-2.5 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-image"></i> Save Gambar
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeReceiptModal()" class="w-1/3 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs">Tutup</button>
+                    <button onclick="window.print()" class="cute-btn w-2/3 py-2.5 bg-pinky-500 hover:bg-pinky-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-print"></i> Cetak Struk
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to format currency
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        }
+
+        // Initial Default Categories
+        const defaultCategories = ['Stiker', 'Banner', 'Brosur', 'Sublim', 'Bahan Baku', 'Lainnya'];
+
+        // Initial Default Catalog
+        const defaultProducts = [
+            { id: 'p1', name: 'Stiker A3+ (Chromo/Vinyl)', category: 'Stiker', cost: 4000, price: 10000, stock: 500, unit: 'lembar', img: 'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=300&auto=format&fit=crop&q=80' },
+            { id: 'p2', name: 'Kartu Nama 1 Box', category: 'Brosur', cost: 15000, price: 35000, stock: 100, unit: 'box', img: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=300&auto=format&fit=crop&q=80' },
+            { id: 'p3', name: 'Banner Flexi 280gr /m2', category: 'Banner', cost: 12000, price: 25000, stock: 200, unit: 'm2', img: 'https://images.unsplash.com/photo-1562654501-a0ccc0fc3fb1?w=300&auto=format&fit=crop&q=80' },
+            { id: 'p4', name: 'Cetak Sublim Mug Custom', category: 'Sublim', cost: 9000, price: 20000, stock: 80, unit: 'pcs', img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&auto=format&fit=crop&q=80' }
+        ];
+
+        const defaultCustomers = [
+            { id: 'c1', name: 'Olivia', phone: '08123456789', address: 'Surabaya' },
+            { id: 'c2', name: 'Toko Bunga Mawar', phone: '08987654321', address: 'Sidoarjo' }
+        ];
+
+        // State Storage Variables
+        let categories = [];
+        let products = [];
+        let customers = [];
+        let orders = [];
+        let expenses = [];
+        let profile = { name: 'Difa Admin', status: '● Online', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80' };
+        let posCart = [];
+        let posPaymentType = 'LUNAS';
+        let posPaymentMethod = 'Tunai';
+        let selectedPaperSize = '58mm';
+        let currentActiveOrder = null;
+        let receiptHeaderText = 'difa.art • Percetakan & Sublim';
+        let receiptSubHeader = 'LITTLE GIFT FOR EVERYONE ♡';
+
+        // On Load Init
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAllData();
+            updateDatePill();
+            renderProfile();
+            renderDashboard();
+            renderCategoryDropdowns();
+            renderPosCatalog();
+            populateCustomerDropdown();
+            renderProductTable();
+            renderCustomerTable();
+            renderOrdersTable();
+            renderPiutangTable();
+            renderExpenseTable();
+            renderReport();
+            applyPaperSizeSetting(selectedPaperSize);
+            applyReceiptHeaderText();
+        });
+
+        function updateDatePill() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('header-date-pill').innerText = new Date().toLocaleDateString('id-ID', options);
+        }
+
+        function loadAllData() {
+            categories = JSON.parse(localStorage.getItem('difa_categories')) || defaultCategories;
+            products = JSON.parse(localStorage.getItem('difa_products')) || defaultProducts;
+            customers = JSON.parse(localStorage.getItem('difa_customers')) || defaultCustomers;
+            orders = JSON.parse(localStorage.getItem('difa_orders')) || [
+                {
+                    id: 'INV-20260925-003',
+                    date: '25 Sep 2026, 10:15',
+                    customer: 'Olivia',
+                    title: 'Stiker Logo Toko',
+                    items: [{ name: 'Stiker A3+', qty: 2, price: 10000 }],
+                    total: 20000,
+                    paid: 15000,
+                    status: 'DP',
+                    paymentMethod: 'Tunai'
+                }
+            ];
+            expenses = JSON.parse(localStorage.getItem('difa_expenses')) || [];
+            profile = JSON.parse(localStorage.getItem('difa_profile')) || profile;
+            selectedPaperSize = localStorage.getItem('difa_papersize') || '58mm';
+            receiptHeaderText = localStorage.getItem('difa_receipt_header') !== null ? localStorage.getItem('difa_receipt_header') : 'difa.art • Percetakan & Sublim';
+            receiptSubHeader = localStorage.getItem('difa_receipt_sub') !== null ? localStorage.getItem('difa_receipt_sub') : 'LITTLE GIFT FOR EVERYONE ♡';
+        }
+
+        function saveState(key, data) {
+            localStorage.setItem('difa_' + key, typeof data === 'string' ? data : JSON.stringify(data));
+        }
+
+        function resetDataPrompt() {
+            if (confirm('Atur ulang seluruh database ke data awal difa.art?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Toggle Sidebar Hide/Show
+        function toggleSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // Navigation Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'kasir', 'produk', 'pelanggan', 'pesanan', 'piutang', 'pengeluaran', 'laporan', 'pengaturan'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                const nav = document.getElementById('nav-' + t);
+                if (t === tabId) {
+                    el.classList.remove('hidden');
+                    if (nav) nav.classList.add('active');
+                } else {
+                    el.classList.add('hidden');
+                    if (nav) nav.classList.remove('active');
+                }
+            });
+
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'kasir') { renderCategoryDropdowns(); renderPosCatalog(); }
+            if (tabId === 'produk') { renderCategoryDropdowns(); renderProductTable(); }
+            if (tabId === 'pelanggan') renderCustomerTable();
+            if (tabId === 'pesanan') renderOrdersTable();
+            if (tabId === 'piutang') renderPiutangTable();
+            if (tabId === 'pengeluaran') renderExpenseTable();
+            if (tabId === 'laporan') renderReport();
+        }
+
+        // ================= FITUR MANAJEMEN KATEGORI =================
+        function renderCategoryDropdowns() {
+            const posFilter = document.getElementById('pos-category-filter');
+            const currentPosVal = posFilter.value || 'ALL';
+            posFilter.innerHTML = `<option value="ALL">Semua Kategori</option>`;
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                posFilter.appendChild(opt);
+            });
+            posFilter.value = categories.includes(currentPosVal) ? currentPosVal : 'ALL';
+
+            const prodCatSelect = document.getElementById('prod-category');
+            const currentProdVal = prodCatSelect.value;
+            prodCatSelect.innerHTML = '';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                prodCatSelect.appendChild(opt);
+            });
+            if (currentProdVal && categories.includes(currentProdVal)) {
+                prodCatSelect.value = currentProdVal;
+            }
+        }
+
+        function openCategoryModal() {
+            renderCategoryListUI();
+            document.getElementById('modal-category').classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('modal-category').classList.add('hidden');
+        }
+
+        function renderCategoryListUI() {
+            const container = document.getElementById('category-list-container');
+            container.innerHTML = '';
+
+            categories.forEach((cat, idx) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-2 bg-purple-50/50 rounded-xl border border-purple-100';
+                div.innerHTML = `
+                    <span class="font-bold text-gray-700">${cat}</span>
+                    <button onclick="deleteCategory(${idx})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1 bg-white border border-rose-200 rounded-lg font-bold">
+                        Hapus
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function saveCategory(e) {
+            e.preventDefault();
+            const input = document.getElementById('cat-name-input');
+            const newCat = input.value.trim();
+
+            if (!newCat) return;
+
+            if (categories.some(c => c.toLowerCase() === newCat.toLowerCase())) {
+                alert('Kategori tersebut sudah ada!');
+                return;
+            }
+
+            categories.push(newCat);
+            saveState('categories', categories);
+            input.value = '';
+
+            renderCategoryListUI();
+            renderCategoryDropdowns();
+            renderPosCatalog();
+        }
+
+        function deleteCategory(index) {
+            const catToDelete = categories[index];
+            const isUsed = products.some(p => p.category === catToDelete);
+            if (isUsed) {
+                alert(`Kategori "${catToDelete}" sedang digunakan oleh produk/bahan. Harap ubah kategori produk tersebut terlebih dahulu!`);
+                return;
+            }
+
+            if (confirm(`Hapus kategori "${catToDelete}"?`)) {
+                categories.splice(index, 1);
+                saveState('categories', categories);
+                renderCategoryListUI();
+                renderCategoryDropdowns();
+                renderPosCatalog();
+            }
+        }
+
+        // ================= FITUR UBAH / HAPUS TEKS NOTA =================
+        function applyReceiptHeaderText() {
+            const headerEl = document.getElementById('receipt-header-text');
+            const subEl = document.getElementById('receipt-store-sub');
+            const settingHeader = document.getElementById('setting-receipt-header');
+            const settingSub = document.getElementById('setting-receipt-sub');
+
+            if (headerEl) {
+                headerEl.innerText = receiptHeaderText;
+                headerEl.style.display = receiptHeaderText.trim() ? 'block' : 'none';
+            }
+            if (subEl) {
+                subEl.innerText = receiptSubHeader;
+                subEl.style.display = receiptSubHeader.trim() ? 'block' : 'none';
+            }
+
+            if (settingHeader) settingHeader.value = receiptHeaderText;
+            if (settingSub) settingSub.value = receiptSubHeader;
+        }
+
+        function saveReceiptHeaderSettings() {
+            const headerVal = document.getElementById('setting-receipt-header').value;
+            const subVal = document.getElementById('setting-receipt-sub').value;
+
+            receiptHeaderText = headerVal;
+            receiptSubHeader = subVal;
+
+            saveState('receipt_header', receiptHeaderText);
+            saveState('receipt_sub', receiptSubHeader);
+            applyReceiptHeaderText();
+
+            alert('Teks nota berhasil diperbarui!');
+        }
+
+        function clearReceiptHeaderText() {
+            if (confirm('Apakah Anda yakin ingin menghapus teks header & slogan pada nota?')) {
+                receiptHeaderText = '';
+                receiptSubHeader = '';
+                document.getElementById('setting-receipt-header').value = '';
+                document.getElementById('setting-receipt-sub').value = '';
+                saveState('receipt_header', '');
+                saveState('receipt_sub', '');
+                applyReceiptHeaderText();
+            }
+        }
+
+        function promptEditReceiptHeader() {
+            const newHeader = prompt('Masukkan Teks Header Utama Nota (Kosongkan jika ingin dihapus):', receiptHeaderText);
+            if (newHeader !== null) {
+                receiptHeaderText = newHeader;
+                const newSub = prompt('Masukkan Teks Sub-Header / Slogan Nota (Kosongkan jika ingin dihapus):', receiptSubHeader);
+                if (newSub !== null) {
+                    receiptSubHeader = newSub;
+                }
+                saveState('receipt_header', receiptHeaderText);
+                saveState('receipt_sub', receiptSubHeader);
+                applyReceiptHeaderText();
+            }
+        }
+
+        // ================= EDIT PROFIL AKUN =================
+        function renderProfile() {
+            document.getElementById('sidebar-account-name').innerText = profile.name;
+            document.getElementById('sidebar-account-status').innerText = profile.status;
+            document.getElementById('sidebar-avatar-img').src = profile.avatar;
+            document.getElementById('header-user-greeting').innerText = profile.name;
+        }
+
+        function openProfileModal() {
+            document.getElementById('profile-name-input').value = profile.name;
+            document.getElementById('profile-status-input').value = profile.status;
+            document.getElementById('profile-avatar-preview').src = profile.avatar;
+            document.getElementById('profile-avatar-data').value = profile.avatar;
+            document.getElementById('modal-profile').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('modal-profile').classList.add('hidden');
+        }
+
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-avatar-preview').src = e.target.result;
+                    document.getElementById('profile-avatar-data').value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            profile.name = document.getElementById('profile-name-input').value;
+            profile.status = document.getElementById('profile-status-input').value;
+            profile.avatar = document.getElementById('profile-avatar-data').value || profile.avatar;
+
+            saveState('profile', profile);
+            renderProfile();
+            closeProfileModal();
+        }
+
+        // ================= DASHBOARD RENDER =================
+        function renderDashboard() {
+            const todaySales = orders.reduce((sum, o) => sum + o.paid, 0);
+            const totalPiutang = orders.filter(o => o.status === 'DP').reduce((sum, o) => sum + (o.total - o.paid), 0);
+            const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            document.getElementById('dash-sales-today').innerText = formatRupiah(todaySales);
+            document.getElementById('dash-trx-count').innerText = orders.length;
+            document.getElementById('dash-piutang-total').innerText = formatRupiah(totalPiutang);
+            document.getElementById('dash-expense-today').innerText = formatRupiah(totalExpenses);
+
+            const list = document.getElementById('dash-recent-list');
+            list.innerHTML = '';
+
+            orders.slice(0, 5).forEach(o => {
+                const isDp = o.status === 'DP';
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 bg-pinky-50/40 rounded-2xl border border-pinky-100 text-xs';
+                div.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-800">${o.id}</span>
+                            <span class="text-gray-400">• ${o.customer}</span>
+                        </div>
+                        <div class="flex gap-1.5 mt-1">
+                            <span class="${isDp ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'} text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                ${isDp ? `DP · ${formatRupiah(o.paid)}` : 'LUNAS'}
+                            </span>
+                            <button onclick="previewOrderReceipt('${o.id}')" class="bg-pinky-100 text-pinky-600 hover:bg-pinky-200 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                Preview Struk
+                            </button>
+                        </div>
+                    </div>
+                    <span class="font-bold font-mono text-gray-700">${formatRupiah(o.total)}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // ================= POS / KASIR =================
+        function renderPosCatalog() {
+            const grid = document.getElementById('pos-product-grid');
+            grid.innerHTML = '';
+
+            const search = document.getElementById('pos-search').value.toLowerCase();
+            const cat = document.getElementById('pos-category-filter').value;
+
+            const filtered = products.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(search);
+                const matchesCat = (cat === 'ALL' || p.category === cat);
+                return matchesSearch && matchesCat;
+            });
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'cute-card p-2.5 flex flex-col justify-between hover:border-pinky-400 cursor-pointer transition group';
+                card.onclick = () => addToPosCart(p);
+
+                card.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="h-20 w-full bg-pinky-50 rounded-xl overflow-hidden relative">
+                            <img src="${p.img || 'https://placehold.co/200x150/ffe4e6/e11d48?text=difa.art'}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://placehold.co/200x150/ffe4e6/e11d48?text=difa.art'">
+                            <span class="absolute top-1 right-1 bg-white/90 text-pinky-600 text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-pinky-200">
+                                ${formatRupiah(p.price)}
+                            </span>
+                        </div>
+                        <h4 class="font-cute font-bold text-xs text-gray-800 line-clamp-1 group-hover:text-pinky-600">${p.name}</h4>
+                        <p class="text-[10px] text-gray-400">Stok: ${p.stock} ${p.unit}</p>
+                    </div>
+                    <button class="mt-2 w-full py-1 bg-pinky-100 hover:bg-pinky-500 hover:text-white text-pinky-600 text-xs font-bold rounded-lg transition">+ Tambah</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterPosProducts() {
+            renderPosCatalog();
+        }
+
+        function addToPosCart(product) {
+            const index = posCart.findIndex(item => item.id === product.id);
+            if (index > -1) {
+                posCart[index].qty += 1;
+            } else {
+                posCart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    unit: product.unit,
+                    qty: 1,
+                    note: ''
+                });
+            }
+            renderPosCart();
+        }
+
+        function updatePosCartPrice(index, newPrice) {
+            const price = parseFloat(newPrice);
+            if (!isNaN(price) && price >= 0) {
+                posCart[index].price = price;
+                renderPosCart();
+            }
+        }
+
+        function promptCustomPrice(index) {
+            const current = posCart[index].price;
+            const newPrice = prompt("Masukkan harga kustom/satuan baru (Rp):", current);
+            if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+                updatePosCartPrice(index, parseFloat(newPrice));
+            }
+        }
+
+        // TOGGLE & HELPER TOTAL HARGA MANUAL
+        function toggleCustomTotalInput() {
+            const isChecked = document.getElementById('pos-custom-total-check').checked;
+            const box = document.getElementById('pos-custom-total-box');
+            if (isChecked) {
+                box.classList.remove('hidden');
+                const calculatedSubtotal = posCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                document.getElementById('pos-custom-total-input').value = calculatedSubtotal;
+            } else {
+                box.classList.add('hidden');
+            }
+            calculatePosChange();
+        }
+
+        function getFinalPosTotal() {
+            const calculatedSubtotal = posCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const isCustomChecked = document.getElementById('pos-custom-total-check').checked;
+            if (isCustomChecked) {
+                const customVal = parseFloat(document.getElementById('pos-custom-total-input').value);
+                return !isNaN(customVal) && customVal >= 0 ? customVal : calculatedSubtotal;
+            }
+            return calculatedSubtotal;
+        }
+
+        function renderPosCart() {
+            const container = document.getElementById('pos-cart-list');
+            container.innerHTML = '';
+
+            if (posCart.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-gray-400 py-6">Keranjang kasir kosong</p>`;
+                document.getElementById('pos-subtotal-text').innerText = 'Rp 0';
+                document.getElementById('pos-calculated-total-text').innerText = 'Rp 0';
+                calculatePosChange();
+                return;
+            }
+
+            let subtotalCalc = 0;
+            posCart.forEach((item, idx) => {
+                const sub = item.price * item.qty;
+                subtotalCalc += sub;
+
+                const div = document.createElement('div');
+                div.className = 'bg-pinky-50/50 p-2.5 rounded-xl border border-pinky-100 space-y-2 text-xs';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start font-bold text-gray-800">
+                        <span class="line-clamp-1 pr-2">${item.name}</span>
+                        <span class="font-mono text-pinky-600 shrink-0">${formatRupiah(sub)}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-2 bg-white/80 p-1.5 rounded-lg border border-pinky-200">
+                        <span class="text-[10px] text-gray-500 font-medium">Harga @:</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-gray-400 font-bold">Rp</span>
+                            <input type="number" value="${item.price}" onchange="updatePosCartPrice(${idx}, this.value)" class="w-20 px-1.5 py-0.5 text-right font-mono font-bold text-xs border border-pinky-200 rounded focus:outline-none focus:border-pinky-400 bg-white">
+                            <button onclick="promptCustomPrice(${idx})" title="Ubah Harga" class="text-pinky-500 hover:text-pinky-700 text-xs px-1">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center gap-2">
+                        <input type="text" value="${item.note}" onchange="posCart[${idx}].note = this.value" placeholder="Ukuran / Catatan..." class="w-full text-[10px] px-2 py-1 bg-white border border-pinky-200 rounded-md focus:outline-none">
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button onclick="updatePosQty(${idx}, -1)" class="w-5 h-5 bg-white border border-pinky-200 rounded text-xs font-bold text-pinky-600 hover:bg-pinky-100">-</button>
+                            <span class="text-xs font-bold px-1 font-mono">${item.qty}</span>
+                            <button onclick="updatePosQty(${idx}, 1)" class="w-5 h-5 bg-white border border-pinky-200 rounded text-xs font-bold text-pinky-600 hover:bg-pinky-100">+</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('pos-subtotal-text').innerText = formatRupiah(subtotalCalc);
+            
+            // Update input total kustom jika tidak sedang dicentang
+            if (!document.getElementById('pos-custom-total-check').checked) {
+                document.getElementById('pos-custom-total-input').value = subtotalCalc;
+            }
+            calculatePosChange();
+        }
+
+        function updatePosQty(idx, delta) {
+            posCart[idx].qty += delta;
+            if (posCart[idx].qty <= 0) posCart.splice(idx, 1);
+            renderPosCart();
+        }
+
+        function clearCart() {
+            posCart = [];
+            document.getElementById('pos-print-title').value = '';
+            document.getElementById('pos-cash-input').value = '';
+            document.getElementById('pos-custom-total-check').checked = false;
+            document.getElementById('pos-custom-total-box').classList.add('hidden');
+            renderPosCart();
+        }
+
+        function setPaymentType(type) {
+            posPaymentType = type;
+            document.querySelectorAll('.pay-type-btn').forEach(btn => {
+                btn.className = 'pay-type-btn border border-pinky-200 bg-white text-gray-600 hover:border-pinky-300 py-1.5 rounded-xl font-bold';
+            });
+            document.getElementById('paytype-' + type).className = 'pay-type-btn border-2 border-pinky-400 bg-pinky-100 text-pinky-700 py-1.5 rounded-xl font-bold';
+
+            if (type === 'DP') {
+                document.getElementById('cash-label').innerText = 'DP Terbayar (Rp):';
+                document.getElementById('change-label').innerText = 'Sisa Piutang:';
+            } else {
+                document.getElementById('cash-label').innerText = 'Bayar (Rp):';
+                document.getElementById('change-label').innerText = 'Kembalian:';
+            }
+            calculatePosChange();
+        }
+
+        function setPaymentMethod(method) {
+            posPaymentMethod = method;
+            document.querySelectorAll('.pay-method-btn').forEach(btn => {
+                btn.className = 'pay-method-btn border border-pinky-200 bg-white text-gray-600 py-1 rounded-lg';
+            });
+            document.getElementById('paymethod-' + method).className = 'pay-method-btn border-2 border-pinky-400 bg-pinky-100 text-pinky-700 py-1 rounded-lg font-bold';
+        }
+
+        function calculatePosChange() {
+            const grandTotal = getFinalPosTotal();
+            document.getElementById('pos-calculated-total-text').innerText = formatRupiah(grandTotal);
+
+            const cash = parseFloat(document.getElementById('pos-cash-input').value) || 0;
+            const res = cash - grandTotal;
+
+            const changeEl = document.getElementById('pos-change-text');
+            if (posPaymentType === 'LUNAS') {
+                if (res >= 0) {
+                    changeEl.innerText = formatRupiah(res);
+                    changeEl.className = 'font-mono text-emerald-600 font-bold';
+                } else {
+                    changeEl.innerText = '-' + formatRupiah(Math.abs(res));
+                    changeEl.className = 'font-mono text-rose-500 font-bold';
+                }
+            } else {
+                const remaining = grandTotal - cash;
+                changeEl.innerText = formatRupiah(remaining > 0 ? remaining : 0);
+                changeEl.className = 'font-mono text-amber-600 font-bold';
+            }
+        }
+
+        function processCheckout() {
+            if (posCart.length === 0) {
+                alert('Keranjang belanja masih kosong!');
+                return;
+            }
+
+            const printTitle = document.getElementById('pos-print-title').value.trim();
+            if (!printTitle) {
+                alert('Mohon isi Judul Cetak / Nama File terlebih dahulu!');
+                return;
+            }
+
+            const customer = document.getElementById('pos-customer-select').value;
+            const grandTotal = getFinalPosTotal();
+            let cashPaid = parseFloat(document.getElementById('pos-cash-input').value) || 0;
+
+            if (posPaymentType === 'LUNAS' && posPaymentMethod === 'Tunai' && cashPaid < grandTotal) {
+                alert('Uang pembayaran kurang dari total tagihan!');
+                return;
+            }
+
+            if (posPaymentType === 'LUNAS' && posPaymentMethod !== 'Tunai') {
+                cashPaid = grandTotal;
+            }
+
+            const newOrder = {
+                id: 'INV-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(100 + Math.random() * 900),
+                date: new Date().toLocaleString('id-ID'),
+                customer: customer,
+                title: printTitle,
+                items: [...posCart],
+                total: grandTotal,
+                paid: cashPaid,
+                status: posPaymentType,
+                paymentMethod: posPaymentMethod
+            };
+
+            orders.unshift(newOrder);
+            saveState('orders', orders);
+
+            previewOrderReceipt(newOrder.id);
+            clearCart();
+            renderDashboard();
+        }
+
+        // ================= RECEIPT PREVIEW & EXPORTS =================
+        function previewOrderReceipt(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            currentActiveOrder = order;
+
+            applyReceiptHeaderText();
+
+            document.getElementById('receipt-id').innerText = '#' + order.id;
+            document.getElementById('receipt-date').innerText = order.date;
+            document.getElementById('receipt-customer').innerText = order.customer;
+            document.getElementById('receipt-title').innerText = order.title;
+
+            const badge = document.getElementById('receipt-status-badge');
+            badge.innerText = order.status;
+            badge.className = order.status === 'LUNAS' ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold';
+
+            const list = document.getElementById('receipt-items-list');
+            list.innerHTML = '';
+            order.items.forEach(i => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between text-xs';
+                row.innerHTML = `
+                    <div>
+                        <span class="font-bold">${i.name} x${i.qty}</span> <span class="text-[9px] text-gray-500">(@${formatRupiah(i.price)})</span>
+                        <div class="text-[9px] text-gray-400 italic">${i.note || '-'}</div>
+                    </div>
+                    <span class="font-mono font-bold">${formatRupiah(i.price * i.qty)}</span>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('receipt-total').innerText = formatRupiah(order.total);
+            document.getElementById('receipt-cash').innerText = formatRupiah(order.paid);
+
+            if (order.status === 'LUNAS') {
+                document.getElementById('receipt-change-lbl').innerText = 'Kembalian:';
+                document.getElementById('receipt-change').innerText = formatRupiah(order.paid - order.total > 0 ? order.paid - order.total : 0);
+            } else {
+                document.getElementById('receipt-change-lbl').innerText = 'Sisa Piutang:';
+                document.getElementById('receipt-change').innerText = formatRupiah(order.total - order.paid);
+            }
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        function downloadReceiptPDF() {
+            const element = document.getElementById('printable-receipt-wrapper');
+            const fileName = currentActiveOrder ? `Nota_${currentActiveOrder.id}.pdf` : 'Nota_difa_art.pdf';
+
+            const opt = {
+                margin:       3,
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: selectedPaperSize === 'a4' ? 'a4' : (selectedPaperSize === 'a5' ? 'a5' : [80, 150]), orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function downloadReceiptImage() {
+            const element = document.getElementById('printable-receipt-wrapper');
+            const fileName = currentActiveOrder ? `Nota_${currentActiveOrder.id}.png` : 'Nota_difa_art.png';
+
+            html2canvas(element, { scale: 3 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        // ================= PENGATURAN UKURAN STRUK =================
+        function selectReceiptPaperSize(size) {
+            selectedPaperSize = size;
+            localStorage.setItem('difa_papersize', size);
+            applyPaperSizeSetting(size);
+        }
+
+        function applyPaperSizeSetting(size) {
+            const wrapper = document.getElementById('printable-receipt-wrapper');
+            wrapper.className = `bg-white border border-pinky-200 p-4 rounded-xl shadow-xs space-y-3 font-sans text-gray-800 paper-${size}`;
+
+            document.querySelectorAll('.paper-size-card').forEach(card => {
+                card.className = 'paper-size-card p-4 rounded-2xl border border-pinky-200 bg-white cursor-pointer flex items-center justify-between hover:border-pinky-300';
+                const icon = card.querySelector('i');
+                if (icon) icon.className = 'fa-solid fa-circle text-gray-300 text-lg';
+            });
+
+            const activeCard = document.getElementById('size-card-' + size);
+            if (activeCard) {
+                activeCard.className = 'paper-size-card p-4 rounded-2xl border-2 border-pinky-400 bg-pinky-50 cursor-pointer flex items-center justify-between';
+                const icon = activeCard.querySelector('i');
+                if (icon) icon.className = 'fa-solid fa-check-circle text-pinky-600 text-lg';
+            }
+        }
+
+        // ================= PRODUK & BAHAN MANAGEMENT =================
+        function renderProductTable() {
+            const tbody = document.getElementById('product-table-body');
+            tbody.innerHTML = '';
+
+            const search = document.getElementById('product-mgr-search').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search));
+
+            filtered.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-pinky-50/50';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <img src="${p.img || 'https://placehold.co/100'}" class="w-10 h-10 rounded-xl object-cover border border-pinky-200" onerror="this.src='https://placehold.co/100'">
+                    </td>
+                    <td class="p-3 font-bold text-gray-800">${p.name}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-pinky-100 text-pinky-700 rounded-full text-[10px] font-bold">${p.category}</span></td>
+                    <td class="p-3 font-mono text-gray-500">${formatRupiah(p.cost || 0)}</td>
+                    <td class="p-3 font-mono font-bold text-pinky-600">${formatRupiah(p.price)}</td>
+                    <td class="p-3 font-mono">${p.stock || 0} ${p.unit}</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="editProduct('${p.id}')" class="px-2.5 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg font-bold text-[10px]">
+                            <i class="fa-solid fa-pen-to-square"></i> Ubah Harga/Data
+                        </button>
+                        <button onclick="deleteProduct('${p.id}')" class="px-2 py-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-lg font-bold text-[10px]">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('prod-img-preview').src = e.target.result;
+                    document.getElementById('prod-img-data').value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openAddProductModal() {
+            renderCategoryDropdowns();
+            document.getElementById('modal-product-title').innerText = 'Tambah Produk / Bahan Baru';
+            document.getElementById('form-product').reset();
+            document.getElementById('prod-id').value = '';
+            document.getElementById('prod-img-data').value = '';
+            document.getElementById('prod-img-preview').src = 'https://placehold.co/150x150/ffe4e6/e11d48?text=Foto';
+            document.getElementById('modal-product').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('modal-product').classList.add('hidden');
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const name = document.getElementById('prod-name').value;
+            const category = document.getElementById('prod-category').value;
+            const unit = document.getElementById('prod-unit').value;
+            const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
+            const price = parseFloat(document.getElementById('prod-price').value) || 0;
+            const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+            const imgData = document.getElementById('prod-img-data').value;
+
+            if (id) {
+                const idx = products.findIndex(p => p.id === id);
+                if (idx > -1) {
+                    products[idx] = {
+                        id, name, category, unit, cost, price, stock,
+                        img: imgData || products[idx].img
+                    };
+                }
+            } else {
+                products.push({
+                    id: 'prod-' + Date.now(),
+                    name, category, unit, cost, price, stock,
+                    img: imgData || 'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=300&auto=format&fit=crop&q=80'
+                });
+            }
+
+            saveState('products', products);
+            renderProductTable();
+            renderPosCatalog();
+            closeProductModal();
+        }
+
+        function editProduct(id) {
+            renderCategoryDropdowns();
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('modal-product-title').innerText = 'Edit Produk / Ubah Harga & Gambar';
+            document.getElementById('prod-id').value = p.id;
+            document.getElementById('prod-name').value = p.name;
+            document.getElementById('prod-category').value = p.category;
+            document.getElementById('prod-unit').value = p.unit;
+            document.getElementById('prod-cost').value = p.cost;
+            document.getElementById('prod-price').value = p.price;
+            document.getElementById('prod-stock').value = p.stock;
+            document.getElementById('prod-img-data').value = p.img || '';
+            document.getElementById('prod-img-preview').src = p.img || 'https://placehold.co/150x150/ffe4e6/e11d48?text=Foto';
+
+            document.getElementById('modal-product').classList.remove('hidden');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Hapus produk ini dari katalog?')) {
+                products = products.filter(p => p.id !== id);
+                saveState('products', products);
+                renderProductTable();
+                renderPosCatalog();
+            }
+        }
+
+        // ================= CUSTOMERS =================
+        function populateCustomerDropdown() {
+            const select = document.getElementById('pos-customer-select');
+            select.innerHTML = '<option value="Umum">Pelanggan Umum</option>';
+            customers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.innerText = `${c.name} (${c.phone || '-'})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderCustomerTable() {
+            const tbody = document.getElementById('customer-table-body');
+            tbody.innerHTML = '';
+            customers.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-gray-800">${c.name}</td>
+                    <td class="p-3 font-mono">${c.phone || '-'}</td>
+                    <td class="p-3 text-gray-500">${c.address || '-'}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteCustomer('${c.id}')" class="px-2 py-1 bg-rose-100 text-rose-700 rounded-lg text-[10px] font-bold">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddCustomerModal() {
+            document.getElementById('modal-customer').classList.remove('hidden');
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('modal-customer').classList.add('hidden');
+        }
+
+        function saveCustomer(e) {
+            e.preventDefault();
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const address = document.getElementById('cust-address').value;
+
+            customers.push({ id: 'cust-' + Date.now(), name, phone, address });
+            saveState('customers', customers);
+            populateCustomerDropdown();
+            renderCustomerTable();
+            closeCustomerModal();
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('Hapus pelanggan ini?')) {
+                customers = customers.filter(c => c.id !== id);
+                saveState('customers', customers);
+                populateCustomerDropdown();
+                renderCustomerTable();
+            }
+        }
+
+        // ================= ORDERS & PIUTANG =================
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
+            orders.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-pinky-50/50';
+                tr.innerHTML = `
+                    <td class="p-3 font-mono"><span class="font-bold text-pinky-600">#${o.id}</span><br><span class="text-[10px] text-gray-400">${o.date}</span></td>
+                    <td class="p-3 font-bold text-gray-800">${o.title}</td>
+                    <td class="p-3">${o.customer}</td>
+                    <td class="p-3"><span class="${o.status === 'LUNAS' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'} px-2 py-0.5 rounded-full text-[10px] font-bold">${o.status}</span></td>
+                    <td class="p-3 font-mono font-bold">${formatRupiah(o.total)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="previewOrderReceipt('${o.id}')" class="px-2.5 py-1 bg-pinky-100 text-pinky-600 rounded-lg text-[10px] font-bold">Preview Struk</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPiutangTable() {
+            const tbody = document.getElementById('piutang-table-body');
+            tbody.innerHTML = '';
+
+            const piutangList = orders.filter(o => o.status === 'DP');
+            if (piutangList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-400">Tidak ada piutang tertunggak ♡</td></tr>`;
+                return;
+            }
+
+            piutangList.forEach(o => {
+                const remaining = o.total - o.paid;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold">${o.id}</td>
+                    <td class="p-3 font-bold text-gray-800">${o.customer}</td>
+                    <td class="p-3 font-mono">${formatRupiah(o.total)}</td>
+                    <td class="p-3 font-mono text-emerald-600">${formatRupiah(o.paid)}</td>
+                    <td class="p-3 font-mono text-rose-500 font-bold">${formatRupiah(remaining)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="payOffPiutang('${o.id}')" class="px-3 py-1 bg-emerald-500 text-white rounded-lg font-bold text-[10px] hover:bg-emerald-600">Pelunasan</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function payOffPiutang(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            if (confirm(`Lunasi sisa pembayaran sebesar ${formatRupiah(order.total - order.paid)}?`)) {
+                order.paid = order.total;
+                order.status = 'LUNAS';
+                saveState('orders', orders);
+                renderPiutangTable();
+                renderOrdersTable();
+                renderDashboard();
+            }
+        }
+
+        // ================= EXPENSES & REPORTS =================
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expense-table-body');
+            tbody.innerHTML = '';
+            expenses.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-gray-400">${e.date}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-pinky-100 text-pinky-700 rounded-full font-bold text-[10px]">${e.category}</span></td>
+                    <td class="p-3 font-bold text-gray-800">${e.desc}</td>
+                    <td class="p-3 text-right font-mono font-bold text-rose-500">${formatRupiah(e.amount)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddExpenseModal() {
+            document.getElementById('modal-expense').classList.remove('hidden');
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('modal-expense').classList.add('hidden');
+        }
+
+        function saveExpense(e) {
+            e.preventDefault();
+            const category = document.getElementById('exp-category').value;
+            const desc = document.getElementById('exp-desc').value;
+            const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
+
+            expenses.unshift({
+                id: 'exp-' + Date.now(),
+                date: new Date().toLocaleDateString('id-ID'),
+                category, desc, amount
+            });
+
+            saveState('expenses', expenses);
+            renderExpenseTable();
+            renderDashboard();
+            closeExpenseModal();
+        }
+
+        function renderReport() {
+            const totalSales = orders.reduce((sum, o) => sum + o.paid, 0);
+            const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            document.getElementById('report-total-sales').innerText = formatRupiah(totalSales);
+            document.getElementById('report-total-expense').innerText = formatRupiah(totalExpense);
+            document.getElementById('report-net-profit').innerText = formatRupiah(totalSales - totalExpense);
+        }
+
+        function exportSalesToCSV() {
+            if (orders.length === 0) {
+                alert('Belum ada data transaksi.');
+                return;
+            }
+
+            let csv = "\uFEFFNo Invoice,Tanggal,Pelanggan,Judul Cetak,Status,Total Tagihan,Terbayar\n";
+            orders.forEach(o => {
+                csv += `"${o.id}","${o.date}","${o.customer}","${o.title}","${o.status}","${o.total}","${o.paid}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Rekap_difa_art_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
